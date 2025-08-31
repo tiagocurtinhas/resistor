@@ -69,6 +69,31 @@ function formatOhms(v){
   return v.toFixed(v%1===0?0:3).replace(/\.?0+$/,"")+" Ω";
 }
 
+function defaultToleranceColorFor(bands){
+  return (bands===4) ? "ouro" : "marrom";
+}
+function bandKindAtIndex(i, bands){
+  if (bands===4){
+    return (i<=1)?"digit": (i===2?"mult":"tol");
+  } else if (bands===5){
+    return (i<=2)?"digit": (i===3?"mult":"tol");
+  } else {
+    if (i<=2) return "digit";
+    if (i===3) return "mult";
+    if (i===4) return "tol";
+    return "temp";
+  }
+}
+function valueLabelFor(kind, color){
+  if (!color || color==="(padrão)" || color==="(nenhum)") return "-";
+  if (kind==="digit") return String(DIGIT_INDEX[color]);
+  if (kind==="mult")  return "×10^" + (MULT_EXP[color] ?? 0);
+  if (kind==="tol")   return (TOL_MAP[color]||"-");
+  if (kind==="temp")  return (TEMPCO_MAP[color]||"-");
+  return "";
+}
+
+
 // ======= E-series generation =======
 function roundToSig(x, sig){
   if (x === 0) return 0;
@@ -335,28 +360,59 @@ function applyPresetValue(preset){
 function drawBands() {
   bandRects.forEach(r=>r.remove());
   bandRects = [];
+  let labelsGroup = document.getElementById("band-labels");
+  if (!labelsGroup){
+    labelsGroup = document.createElementNS("http://www.w3.org/2000/svg","g");
+    labelsGroup.setAttribute("id","band-labels");
+    svg.appendChild(labelsGroup);
+  }
+  while (labelsGroup.firstChild) labelsGroup.removeChild(labelsGroup.firstChild);
 
   const startX = 210, endX = 510;
   const span = endX - startX;
   const n = state.bands;
   const bandWidth = 20;
-  for (let i=0; i<n; i++){
+
+  function kindAt(i){
+    if (n===4) return (i<=1)?"digit":(i===2?"mult":"tol");
+    if (n===5) return (i<=2)?"digit":(i===3?"mult":"tol");
+    return (i<=2)?"digit":(i===3?"mult":(i===4?"tol":"temp"));
+  }
+  function tolDefault(){ return (n===4)?"ouro":"marrom"; }
+
+  for (let i=0;i<n;i++){
     const x = startX + ((i+0.5) * span / n) - bandWidth/2;
-    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    const rect = document.createElementNS("http://www.w3.org/2000/svg","rect");
     rect.setAttribute("x", x);
     rect.setAttribute("y", 60);
     rect.setAttribute("width", bandWidth);
     rect.setAttribute("height", 100);
     rect.setAttribute("rx", 6);
     rect.setAttribute("class", "band");
-    const color = state.colors[i] || "preto";
-    rect.setAttribute("fill", COLORS_HEX[color] || "#000");
+    let c = state.colors[i];
+    const k = kindAt(i);
+    if (k==="tol" && (!c || c==="(padrão)")) c = tolDefault();
+    if (k==="temp" && (!c || c==="(nenhum)")) c = "sem cor";
+    if (!c || c==="(padrão)") c = "preto";
+    rect.style.fill = COLORS_HEX[c] || "#0b0b10";
     svg.appendChild(rect);
     bandRects.push(rect);
-  }
-  bandRects.forEach((r,i)=> r.setAttribute("fill", COLORS_HEX[state.colors[i] || "preto"]));
-}
 
+    const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+    t.setAttribute("x", x + bandWidth/2);
+    t.setAttribute("y", 170);
+    t.setAttribute("text-anchor","middle");
+    t.setAttribute("font-size","12px");
+    t.setAttribute("fill", getComputedStyle(document.documentElement).getPropertyValue("--band-label-color").trim() || "#0b0b10");
+    let lbl = "-";
+    if (k==="digit") lbl = String(DIGIT_INDEX[c]);
+    else if (k==="mult") lbl = "×10^" + (MULT_EXP[c] ?? 0);
+    else if (k==="tol") lbl = TOL_MAP[c] || "-";
+    else if (k==="temp") lbl = TEMPCO_MAP[c] || "-";
+    t.textContent = lbl;
+    labelsGroup.appendChild(t);
+  }
+}
 async function calc(){
   const params = new URLSearchParams();
   params.set("bands", state.bands);
