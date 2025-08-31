@@ -7,12 +7,11 @@
   <title>Calculadora de Cores de Resistores</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/static/styles.css"/>
-  <script defer src="/static/script.js"></script>
 </head>
 <body>
   <header>
     <h1>Calculadora de Cores de Resistores</h1>
-    <p>Selecione a quantidade de faixas e suas cores. A resistência e a tolerância são calculadas em tempo real.</p>
+    <p>Selecione a quantidade de faixas e suas cores. A resistência, tolerância e faixa útil são calculadas em tempo real.</p>
   </header>
 
   <main>
@@ -32,6 +31,10 @@
           <div class="value">—</div>
           <div class="tolerance">Tolerância: —</div>
           <div class="range">Faixa: —</div>
+          <div class="actions">
+            <button id="btn-png">Exportar PNG</button>
+            <button id="btn-pdf">Exportar PDF</button>
+          </div>
           <div class="tempco" id="tempco-line" style="display:none">Tempco: —</div>
         </div>
       </div>
@@ -42,8 +45,6 @@
         </figure>
       </aside>
     </section>
-
-    <section class="controls bottom" id="controls-bottom"></section>
   </main>
 
   <footer>
@@ -51,13 +52,25 @@
   </footer>
 
   <script>
-    // Dados passados pelo backend via template context (se necessário)
     window.COLORS = {
       digit: {{ colors_digit|tojson }},
       mult: {{ colors_mult|tojson }},
       tol: {{ colors_tol|tojson }},
-      temp: {{ colors_temp|tojson }}
+      temp: {{ colors_temp|tojson }},
+      presets: {{ presets|tojson }}
     };
   </script>
+
+  <script>
+    window.COLORS = {
+      digit: {{ colors_digit|tojson }},
+      mult: {{ colors_mult|tojson }},
+      tol: {{ colors_tol|tojson }},
+      temp: {{ colors_temp|tojson }},
+      presets: {{ presets|tojson }}
+    };
+  </script>
+  <script src="/static/script.js"></script>
 </body>
+
 </html>
