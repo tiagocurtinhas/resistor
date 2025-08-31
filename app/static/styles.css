@@ -1,0 +1,32 @@
+
+:root{
+  --bg:#0b0b10; --fg:#e7e7ee; --muted:#a8a8b3; --card:#15151c; --accent:#7c9cff;
+}
+*{box-sizing:border-box}
+body{margin:0; font-family:"Inter",system-ui,Segoe UI,Roboto,Arial; background:var(--bg); color:var(--fg)}
+header{padding:24px 18px; text-align:center; background:linear-gradient(180deg,#12121a,#0b0b10)}
+header h1{margin:0 0 6px; font-size:28px}
+header p{margin:0; color:var(--muted)}
+
+main{max-width:1100px; margin:24px auto; padding:0 16px}
+.resistor-area{display:grid; grid-template-columns:1fr 320px; gap:18px; align-items:center}
+.resistor-wrapper{background:var(--card); border-radius:16px; padding:16px; box-shadow:0 1px 0 #000, 0 8px 24px rgba(0,0,0,.35)}
+.reference img{width:100%; border-radius:12px; background:#fff}
+.reference figcaption{color:var(--muted); font-size:12px; margin-top:6px}
+
+svg{width:100%; height:auto}
+svg rect{fill:#b9b9c2}
+svg .body{fill:#e2c49b; stroke:#b29060; stroke-width:4}
+.band{width:24px}
+
+.controls{display:flex; flex-wrap:wrap; gap:12px; margin:14px 0}
+.controls .field{background:var(--card); padding:10px 12px; border-radius:12px; box-shadow:0 1px 0 #000 inset}
+.controls label{display:block; font-size:12px; color:var(--muted); margin-bottom:4px}
+.controls select{background:#0f0f16; color:var(--fg); border:1px solid #2a2a38; border-radius:10px; padding:8px 10px; min-width:160px}
+.controls .inline{display:flex; gap:12px; align-items:end}
+
+.result{margin-top:10px; display:grid; gap:4px}
+.result .value{font-size:28px; font-weight:700}
+.result .tolerance,.result .range,.result .tempco{color:var(--muted)}
+
+footer{max-width:1100px; margin:12px auto 28px; color:var(--muted); text-align:center}

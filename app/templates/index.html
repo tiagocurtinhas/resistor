@@ -1,0 +1,63 @@
+
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Calculadora de Cores de Resistores</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="/static/styles.css"/>
+  <script defer src="/static/script.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Calculadora de Cores de Resistores</h1>
+    <p>Selecione a quantidade de faixas e suas cores. A resistência e a tolerância são calculadas em tempo real.</p>
+  </header>
+
+  <main>
+    <section class="controls top" id="controls-top"></section>
+
+    <section class="resistor-area">
+      <div class="resistor-wrapper">
+        <svg id="resistor-svg" width="720" height="220" viewBox="0 0 720 220" role="img" aria-label="Visual do resistor">
+          <!-- fios -->
+          <rect x="0" y="103" width="180" height="14" rx="7"></rect>
+          <rect x="540" y="103" width="180" height="14" rx="7"></rect>
+          <!-- corpo -->
+          <rect x="160" y="50" width="400" height="120" rx="60" class="body"></rect>
+          <!-- bandas serão inseridas via JS -->
+        </svg>
+        <div class="result" id="result">
+          <div class="value">—</div>
+          <div class="tolerance">Tolerância: —</div>
+          <div class="range">Faixa: —</div>
+          <div class="tempco" id="tempco-line" style="display:none">Tempco: —</div>
+        </div>
+      </div>
+      <aside class="reference">
+        <figure>
+          <img src="/static/images/cod_resisotr.webp" alt="Tabela de cores (4 faixas)"/>
+          <figcaption>Tabela de referência (4 faixas).</figcaption>
+        </figure>
+      </aside>
+    </section>
+
+    <section class="controls bottom" id="controls-bottom"></section>
+  </main>
+
+  <footer>
+    <small>FastAPI + Front-end estático. Padrões de tolerância quando ausentes: 4 faixas = ±5% (ouro); 5/6 faixas = ±1% (marrom).</small>
+  </footer>
+
+  <script>
+    // Dados passados pelo backend via template context (se necessário)
+    window.COLORS = {
+      digit: {{ colors_digit|tojson }},
+      mult: {{ colors_mult|tojson }},
+      tol: {{ colors_tol|tojson }},
+      temp: {{ colors_temp|tojson }}
+    };
+  </script>
+</body>
+</html>
