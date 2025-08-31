@@ -15,7 +15,51 @@
   </header>
 
   <main>
-    <section class="controls top" id="controls-top"></section>
+    
+<section class="controls top" id="controls-top">
+  <div class="controls inline" id="preset-ui">
+    <div class="field">
+      <label>Pré-sets (buscar por valor)</label>
+      <input id="preset-search" list="preset-list" placeholder="Ex.: 47k, 1M, 330, 4R7..." />
+      <datalist id="preset-list"></datalist>
+    </div>
+    <div class="field">
+      <label>Série</label>
+      <select id="preset-series">
+        <option value="">Todas</option>
+        <option value="E6">E6 (±20%)</option>
+        <option value="E12">E12 (±10%)</option>
+        <option value="E24">E24 (±5%)</option>
+        <option value="E48">E48 (±2%)</option>
+        <option value="E96">E96 (±1%)</option>
+        <option value="E192">E192 (±0.5%)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Ordenar</label>
+      <select id="preset-order">
+        <option value="asc">Menor → Maior</option>
+        <option value="desc">Maior → Menor</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>&nbsp;</label>
+      <div class="inline">
+        <button id="preset-apply">Aplicar</button>
+        <button id="preset-clear" class="ghost">Limpar</button>
+      </div>
+    </div>
+    <div class="field">
+      <label>Quantidade de faixas</label>
+      <select id="band-count">
+        <option value="4">4 faixas</option>
+        <option value="5">5 faixas</option>
+        <option value="6">6 faixas</option>
+      </select>
+    </div>
+  </div>
+</section>
+
 
     <section class="resistor-area">
       <div class="resistor-wrapper">

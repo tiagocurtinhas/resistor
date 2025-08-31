@@ -34,3 +34,10 @@ svg .body{fill:#e2c49b; stroke:#b29060; stroke-width:4}
 .result .actions button:hover{filter:brightness(1.05)}
 
 footer{max-width:1100px; margin:12px auto 28px; color:var(--muted); text-align:center}
+
+
+.controls input{
+  background:#0f0f16; color:var(--fg); border:1px solid var(--line);
+  border-radius:10px; padding:8px 10px; min-width:220px
+}
+button.ghost{ background:transparent; border:1px solid var(--line); color:var(--fg) }

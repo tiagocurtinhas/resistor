@@ -164,7 +164,7 @@ async def api_calc(
 
 # ---------------- Exports ----------------
 
-def render_png(bands: int, colors: List[str], data: Dict) -> Image.Image:
+def render_png(bands: int, colors: List[str], data: Dict, origin: str | None = None) -> Image.Image:
     # Canvas
     W, H = 1200, 700
     img = Image.new("RGBA", (W, H), (11, 11, 16, 255))
@@ -217,6 +217,10 @@ def render_png(bands: int, colors: List[str], data: Dict) -> Image.Image:
     d.text((margin+30, margin+120), data["text_value"], fill=fg, font=font_big)
     d.text((margin+30, margin+200), f"Tolerância: ±{data['tolerance_percent']}%", fill=muted, font=font_med)
     d.text((margin+30, margin+240), f"Faixa: {data['min_text']} — {data['max_text']}", fill=muted, font=font_med)
+
+    # Origin
+    if origin:
+        d.text((margin+30, margin+280), f"Origem: {origin}", fill=muted, font=font_med)
 
     # Legend of bands
     labels = []
@@ -272,7 +276,7 @@ async def export_png(
         cores.append(c5)
 
     data = compute_resistance(bands, [c0,c1,c2,c3,c4,c5])
-    img = render_png(bands, [c0,c1,c2,c3 or "-",c4 or "-",c5 or "-"], data)
+    img = render_png(bands, [c0,c1,c2,c3 or "-",c4 or "-",c5 or "-"], data, origin)
     buf = BytesIO()
     img.save(buf, format="PNG")
     buf.seek(0)
@@ -289,7 +293,7 @@ async def export_pdf(
     c5: Optional[str] = Query(None),
 ):
     data = compute_resistance(bands, [c0,c1,c2,c3,c4,c5])
-    img = render_png(bands, [c0,c1,c2,c3 or "-",c4 or "-",c5 or "-"], data).convert("RGB")
+    img = render_png(bands, [c0,c1,c2,c3 or "-",c4 or "-",c5 or "-"], data, origin).convert("RGB")
     buf = BytesIO()
     img.save(buf, format="PDF")
     buf.seek(0)
