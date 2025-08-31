@@ -41,3 +41,30 @@ footer{max-width:1100px; margin:12px auto 28px; color:var(--muted); text-align:c
   border-radius:10px; padding:8px 10px; min-width:220px
 }
 button.ghost{ background:transparent; border:1px solid var(--line); color:var(--fg) }
+
+
+/* Theme toggle */
+button#theme-toggle{ background:var(--card); border:1px solid var(--line); color:var(--fg); padding:6px 10px; border-radius:10px; cursor:pointer }
+button#theme-toggle:hover{ filter:brightness(1.05) }
+
+/* Light theme */
+:root[data-theme="light"]{
+  --bg:#f6f7fb; --fg:#1b1e24; --muted:#4b5563; --card:#ffffff; --accent:#365cff; --line:#e5e7eb;
+}
+:root[data-theme="light"] header{ background:linear-gradient(180deg,#f0f2f8,#f6f7fb) }
+:root[data-theme="light"] .reference img{ background:#fff }
+
+
+/* Preset custom dropdown */
+.preset-dropdown{ position:relative; }
+.preset-dropdown .menu{
+  position:absolute; z-index:50; top:100%; left:0; right:0;
+  max-height:320px; overflow:auto; background:var(--card);
+  border:1px solid var(--line); border-radius:12px; margin-top:6px; box-shadow:0 8px 24px rgba(0,0,0,.35);
+}
+.preset-dropdown .item{
+  display:flex; align-items:center; gap:8px; padding:8px 10px; cursor:pointer;
+}
+.preset-dropdown .item:hover{ background:rgba(255,255,255,0.06) }
+.preset-swatch{ width:14px; height:14px; border-radius:4px; border:1px solid rgba(0,0,0,.25) }
+.preset-right{ margin-left:auto; color:var(--muted); font-size:12px }

@@ -10,6 +10,7 @@
 </head>
 <body>
   <header>
+    <div style="position:absolute; right:16px; top:16px;"><button id="theme-toggle">Tema</button></div>
     <h1>Calculadora de Cores de Resistores</h1>
     <p>Selecione a quantidade de faixas e suas cores. A resistência, tolerância e faixa útil são calculadas em tempo real.</p>
   </header>
@@ -18,10 +19,10 @@
     
 <section class="controls top" id="controls-top">
   <div class="controls inline" id="preset-ui">
-    <div class="field">
+    <div class="field preset-dropdown">
       <label>Pré-sets (buscar por valor)</label>
-      <input id="preset-search" list="preset-list" placeholder="Ex.: 47k, 1M, 330, 4R7..." />
-      <datalist id="preset-list"></datalist>
+      <input id="preset-search" placeholder="Ex.: 47k, 1M, 330, 4R7..." autocomplete="off"/>
+      <div class="menu" id="preset-menu" style="display:none"></div>
     </div>
     <div class="field">
       <label>Série</label>
@@ -33,6 +34,20 @@
         <option value="E48">E48 (±2%)</option>
         <option value="E96">E96 (±1%)</option>
         <option value="E192">E192 (±0.5%)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Tolerância</label>
+      <select id="preset-tol">
+        <option value="">Padrão da série</option>
+        <option value="20">±20%</option>
+        <option value="10">±10%</option>
+        <option value="5">±5%</option>
+        <option value="2">±2%</option>
+        <option value="1">±1%</option>
+        <option value="0.5">±0,5%</option>
+        <option value="0.25">±0,25%</option>
+        <option value="0.1">±0,1%</option>
       </select>
     </div>
     <div class="field">
@@ -60,6 +75,53 @@
   </div>
 </section>
 
+
+    
+  <!-- Linha fixa de selects das faixas (server-rendered) -->
+  <div class="controls bands-row" id="bands-row">
+    <div class="field">
+      <label>1º dígito</label>
+      <select id="c0">
+        {% for c in colors_digit %}<option value="{{c}}">{{c}}</option>{% endfor %}
+      </select>
+      <div class="hint" id="c0-hint">-</div>
+    </div>
+    <div class="field">
+      <label>2º dígito</label>
+      <select id="c1">
+        {% for c in colors_digit %}<option value="{{c}}">{{c}}</option>{% endfor %}
+      </select>
+      <div class="hint" id="c1-hint">-</div>
+    </div>
+    <div class="field" id="f-c2">
+      <label id="l-c2">Multiplicador</label>
+      <select id="c2">
+        {% for c in colors_mult %}<option value="{{c}}">{{c}}</option>{% endfor %}
+      </select>
+      <div class="hint" id="c2-hint">-</div>
+    </div>
+    <div class="field" id="f-c3">
+      <label id="l-c3">Tolerância</label>
+      <select id="c3">
+        {% for c in colors_tol %}<option value="{{c}}">{{c}}</option>{% endfor %}
+      </select>
+      <div class="hint" id="c3-hint">-</div>
+    </div>
+    <div class="field" id="f-c4" style="display:none">
+      <label id="l-c4">Tolerância</label>
+      <select id="c4">
+        {% for c in colors_tol %}<option value="{{c}}">{{c}}</option>{% endfor %}
+      </select>
+      <div class="hint" id="c4-hint">-</div>
+    </div>
+    <div class="field" id="f-c5" style="display:none">
+      <label id="l-c5">Tempco (ppm/K)</label>
+      <select id="c5">
+        {% for c in colors_temp %}<option value="{{c}}">{{c}}</option>{% endfor %}
+      </select>
+      <div class="hint" id="c5-hint">-</div>
+    </div>
+  </div>
 
     <section class="resistor-area">
       <div class="resistor-wrapper">

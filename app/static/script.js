@@ -26,24 +26,39 @@ function prettyLabel(kind, color){
   if (!color || color === "(padrão)" || color === "(nenhum)") return "-";
   const name = color.charAt(0).toUpperCase()+color.slice(1);
   if (kind === "digit"){
-    return `[${DIGIT_INDEX[color]}] ${color} - ${name}`;
+    return `${DIGIT_INDEX[color]}  ${color} - ${name}`;
   }
   if (kind === "mult"){
     const exp = MULT_EXP[color] ?? 0;
-    return `[×10^${exp}] ${color} - ${name}`;
+    return `×10^${exp}  ${color} - ${name}`;
   }
   if (kind === "tol"){
-    return `[${TOL_MAP[color]||"-"}] ${color} - ${name}`;
+    return `${TOL_MAP[color]||"-"}  ${color} - ${name}`;
   }
   if (kind === "temp"){
-    return `[${TEMPCO_MAP[color]||"-"}] ${color} - ${name}`;
+    return `${TEMPCO_MAP[color]||"-"}  ${color} - ${name}`;
   }
   return `${color} - ${name}`;
 }
 
-function option(el, value, label){
+function contrast(hex){
+  // return black or white for contrast
+  const h = hex.replace("#","");
+  const r = parseInt(h.substr(0,2),16), g = parseInt(h.substr(2,2),16), b = parseInt(h.substr(4,2),16);
+  const yiq = (r*299 + g*587 + b*114)/1000;
+  return yiq >= 200 ? "#111" : "#eee";
+}
+function option(el, value, label, hex){
   const o = document.createElement("option");
   o.value = value; o.textContent = label;
+  if (hex){
+    // Try to render a small swatch at left via text color to approximate; fallback is fine
+    o.textContent = label; // label already includes digit + name; color the whole line softly
+    // Many browsers ignore background on <option>; still set it in case it applies
+    o.style.backgroundImage = `linear-gradient(90deg, ${hex} 0 1.2em, transparent 1.2em)`;
+    o.style.paddingLeft = "0.4em";
+    o.style.borderLeft = `0.8em solid ${hex}`;
+  }
   el.appendChild(o);
 }
 
@@ -116,8 +131,29 @@ function buildCatalog(minOhm=0.1, maxOhm=10_000_000){
   return entries;
 }
 
-let CATALOG = buildCatalog();
+let CATALOG = buildCatalog(0.1, 100_000_000);
 
+function parseOhms(text){
+  if (!text) return null;
+  text = String(text).trim().toLowerCase().replace(/,/g,'.');
+  // Formats: "47k", "1m", "330", "4r7", "1 Ω", "1ohm"
+  const rMatch = text.match(/^(\d*\.?\d+)\s*r\s*(\d+)?$/i);
+  if (rMatch){
+    const a = parseFloat(rMatch[1]);
+    const b = rMatch[2] ? parseFloat("0."+rMatch[2]) : 0;
+    return a + b;
+  }
+  const m = text.match(/^(\d*\.?\d+)\s*(g|m|k|ω|ohm|ohms|)$/i);
+  if (m){
+    let v = parseFloat(m[1]);
+    const u = m[2];
+    if (u==="g") v*=1e9; else if (u==="m") v*=1e6; else if (u==="k") v*=1e3; else v=v;
+    return v;
+  }
+  const n = parseFloat(text);
+  if (!isNaN(n)) return n;
+  return null;
+}
 function filterCatalog({series="", order="asc", query=""}){
   let arr = CATALOG.slice();
   if (series) arr = arr.filter(e=>e.series===series);
@@ -130,116 +166,114 @@ function filterCatalog({series="", order="asc", query=""}){
 }
 
 // ======= Build UI =======
+
 function buildControls() {
-  // Build the selectors row(s) after the preset UI already in HTML
-  const container = document.createElement("div");
-  container.className = "controls";
+  const container = document.getElementById("bands-row");
 
-  const addField = (label, id, options, kind) => {
-    const f = document.createElement("div");
-    f.className = "field";
-    f.innerHTML = `<label>${label}</label><select id="${id}"></select><div class="hint" id="${id}-hint">-</div>`;
-    const sel = f.querySelector("select");
-    options.forEach(c => option(sel, c, prettyLabel(kind, c)));
-    container.appendChild(f);
-    return sel;
-  };
-
-  // Remove old container (if any)
-  const old = topControls.querySelector(".controls:not(#preset-ui)");
-  if (old) old.remove();
-
-  let s1,s2,s3,s4,s5,s6;
-  if (state.bands === 4) {
-    s1 = addField("1º dígito", "c0", window.COLORS.digit, "digit");
-    s2 = addField("2º dígito", "c1", window.COLORS.digit, "digit");
-    s3 = addField("Multiplicador", "c2", window.COLORS.mult, "mult");
-    s4 = addField("Tolerância", "c3", window.COLORS.tol, "tol");
-  } else if (state.bands === 5) {
-    s1 = addField("1º dígito", "c0", window.COLORS.digit, "digit");
-    s2 = addField("2º dígito", "c1", window.COLORS.digit, "digit");
-    s3 = addField("3º dígito", "c2", window.COLORS.digit, "digit");
-    s4 = addField("Multiplicador", "c3", window.COLORS.mult, "mult");
-    s5 = addField("Tolerância", "c4", window.COLORS.tol, "tol");
-  } else {
-    s1 = addField("1º dígito", "c0", window.COLORS.digit, "digit");
-    s2 = addField("2º dígito", "c1", window.COLORS.digit, "digit");
-    s3 = addField("3º dígito", "c2", window.COLORS.digit, "digit");
-    s4 = addField("Multiplicador", "c3", window.COLORS.mult, "mult");
-    s5 = addField("Tolerância", "c4", window.COLORS.tol, "tol");
-    s6 = addField("Tempco (ppm/K)", "c5", window.COLORS.temp, "temp");
+  function addOptions(sel, opts, kind){
+    sel.innerHTML = "";
+    opts.forEach(c => option(sel, c, prettyLabel(kind, c), COLORS_HEX[c]));
   }
-  topControls.appendChild(container);
 
-  // set values
-  ["c0","c1","c2","c3","c4","c5"].forEach((id, idx)=>{
+  const show4 = state.bands === 4;
+  const show5 = state.bands === 5;
+  const show6 = state.bands === 6;
+
+  addOptions(document.getElementById("c0"), window.COLORS.digit, "digit");
+  addOptions(document.getElementById("c1"), window.COLORS.digit, "digit");
+
+  const l2 = document.getElementById("l-c2");
+  const c2 = document.getElementById("c2");
+  if (show4){ l2.textContent = "Multiplicador"; addOptions(c2, window.COLORS.mult, "mult"); }
+  else { l2.textContent = "3º dígito"; addOptions(c2, window.COLORS.digit, "digit"); }
+
+  const l3 = document.getElementById("l-c3");
+  const f3 = document.getElementById("f-c3");
+  const c3 = document.getElementById("c3");
+  if (show4){ l3.textContent = "Tolerância"; addOptions(c3, window.COLORS.tol, "tol"); }
+  else { l3.textContent = "Multiplicador"; addOptions(c3, window.COLORS.mult, "mult"); }
+
+  const f4 = document.getElementById("f-c4");
+  const c4 = document.getElementById("c4");
+  f4.style.display = (show5 || show6) ? "" : "none";
+  if (show5 || show6){ addOptions(c4, window.COLORS.tol, "tol"); }
+
+  const f5 = document.getElementById("f-c5");
+  const c5 = document.getElementById("c5");
+  f5.style.display = show6 ? "" : "none";
+  if (show6){ addOptions(c5, window.COLORS.temp, "temp"); }
+
+  const ids = ["c0","c1","c2","c3","c4","c5"];
+  ids.forEach((id, idx)=>{
     const el = document.getElementById(id);
     if (!el) return;
     const v = state.colors[idx] ?? el.options[0]?.value;
-    if (v) el.value = v;
+    if (v){ el.value = v; }
     updateHint(id);
-    el.addEventListener("change", ()=>{
-      state.colors[idx] = el.value;
-      updateHint(id);
-      drawBands();
-      calc();
-    });
+    el.onchange = ()=>{ state.colors[idx] = el.value; updateHint(id); drawBands(); calc(); };
   });
 
-  // Wire band count selector
   const bandSel = document.getElementById("band-count");
-  bandSel.value = String(state.bands);
-  bandSel.addEventListener("change", (e)=>{
-    state.bands = parseInt(e.target.value,10);
-    buildControls();
-    drawBands();
-    calc();
-  });
+  if (bandSel){
+    bandSel.value = String(state.bands);
+    bandSel.onchange = (e)=>{ state.bands = parseInt(e.target.value,10); buildControls(); drawBands(); calc(); };
+  }
 
-  // Preset UI
   const presetSearch = document.getElementById("preset-search");
-  const presetList = document.getElementById("preset-list");
+  const presetMenu = document.getElementById("preset-menu");
   const presetSeries = document.getElementById("preset-series");
   const presetOrder = document.getElementById("preset-order");
+  const presetTol = document.getElementById("preset-tol");
   const presetApply = document.getElementById("preset-apply");
   const presetClear = document.getElementById("preset-clear");
 
   function refreshDatalist(){
-    // Rebuild datalist items from filtered catalog
-    presetList.innerHTML = "";
-    const items = filterCatalog({series:presetSeries.value, order:presetOrder.value, query:presetSearch.value});
-    items.slice(0,500).forEach(e=>{
-      const opt = document.createElement("option");
-      opt.value = e.label; // show label
-      opt.dataset.ohms = e.ohms;
-      opt.dataset.series = e.series;
-      opt.dataset.tol = e.tolPercent;
-      opt.dataset.bands = e.bands;
-      presetList.appendChild(opt);
+    let q = presetSearch ? presetSearch.value : "";
+    const looksLikeLabel = /[±()]/.test(q);
+    const parsed = parseOhms(q);
+    if (!q || looksLikeLabel || (state.selectedPreset && q === state.selectedPreset.label && parsed==null)) q = "";
+    const items = filterCatalog({series:presetSeries.value, order:presetOrder.value, query:q});
+    presetMenu.innerHTML = "";
+    items.slice(0,400).forEach(e=>{
+      const div = document.createElement("div");
+      div.className = "item";
+      const sw = document.createElement("div");
+      sw.className = "preset-swatch";
+      sw.style.background = "#6d3b13";
+      div.appendChild(sw);
+      const txt = document.createElement("div");
+      txt.textContent = e.label;
+      div.appendChild(txt);
+      const right = document.createElement("div");
+      right.className = "preset-right";
+      right.textContent = formatOhms(e.ohms);
+      div.appendChild(right);
+      div.onmousedown = (ev)=>{
+        ev.preventDefault();
+        state.selectedPreset = e;
+        if (presetSearch) presetSearch.value = e.label;
+        applyPresetValue({...e, tolPercent: parseFloat(presetTol.value || e.tolPercent)});
+        if (presetMenu) presetMenu.style.display = "none";
+        if (presetSearch) presetSearch.blur();
+      };
+      presetMenu.appendChild(div);
     });
+    presetMenu.style.display = (document.activeElement === presetSearch && items.length) ? "block" : "none";
   }
-  presetSearch.addEventListener("input", refreshDatalist);
-  presetSeries.addEventListener("change", refreshDatalist);
-  presetOrder.addEventListener("change", refreshDatalist);
-  refreshDatalist();
 
-  presetApply.onclick = ()=>{
-    const label = presetSearch.value;
-    // Find closest match in current filtered set
-    const items = filterCatalog({series:presetSeries.value, order:presetOrder.value, query:label});
-    if (!items.length) return;
-    const p = items[0];
-    state.selectedPreset = p;
-    // Apply to bands/colors
-    applyPresetValue(p);
-  };
-  presetClear.onclick = ()=>{
-    presetSearch.value = "";
-    state.selectedPreset = null;
-    refreshDatalist();
-  };
+  if (presetSearch){
+    presetSearch.onclick = ()=> { refreshDatalist(); if(presetMenu) presetMenu.style.display = "block"; };
+    presetSearch.oninput = ()=> refreshDatalist();
+    presetSearch.onkeydown = (e)=>{ if (e.key === "Enter"){ e.preventDefault(); applyFromSearch(); } };
+    presetSearch.onfocus = ()=> { refreshDatalist(); if(presetMenu) presetMenu.style.display = "block"; };
+    presetSearch.onblur = ()=>{ setTimeout(()=>{ if(presetMenu) presetMenu.style.display="none"; }, 80); };
+  }
+  if (presetSeries) presetSeries.onchange = ()=>{ if(presetMenu) presetMenu.style.display="none"; if(presetSearch) presetSearch.value=""; refreshDatalist(); };
+  if (presetOrder) presetOrder.onchange = ()=> refreshDatalist();
+  if (presetTol) presetTol.onchange = ()=>{ if (state.selectedPreset){ applyPresetValue({...state.selectedPreset, tolPercent: parseFloat(presetTol.value||state.selectedPreset.tolPercent)}); }};
+  if (presetApply) presetApply.onclick = ()=> applyFromSearch();
+  if (presetClear) presetClear.onclick = ()=>{ if(presetSearch) presetSearch.value=""; state.selectedPreset=null; refreshDatalist(); };
 }
-
 function updateHint(id){
   const el = document.getElementById(id);
   const hint = document.getElementById(id+"-hint");
@@ -376,3 +410,54 @@ async function calc(){
 buildControls();
 drawBands();
 calc();
+
+
+// ======= Keyboard navigation between selects =======
+document.addEventListener("keydown", (e)=>{
+  const ids = ["c0","c1","c2","c3","c4","c5"].filter(id=>document.getElementById(id));
+  const active = document.activeElement;
+  const idx = ids.indexOf(active?.id);
+  if (idx >= 0){
+    if (e.key === "ArrowLeft" && idx > 0){ e.preventDefault(); document.getElementById(ids[idx-1]).focus(); }
+    if (e.key === "ArrowRight" && idx < ids.length-1){ e.preventDefault(); document.getElementById(ids[idx+1]).focus(); }
+  }
+});
+
+// ======= Theme toggle =======
+const root = document.documentElement;
+function setTheme(t){ root.setAttribute("data-theme", t); localStorage.setItem("theme", t); }
+(function initTheme(){
+  const saved = localStorage.getItem("theme");
+  if (saved) setTheme(saved);
+})();
+document.getElementById("theme-toggle").onclick = ()=>{
+  const cur = root.getAttribute("data-theme") || "dark";
+  setTheme(cur==="dark"?"light":"dark");
+};
+document.addEventListener("keydown", (e)=>{
+  if (e.key.toLowerCase() === "t" && (e.ctrlKey || e.metaKey)){
+    e.preventDefault();
+    document.getElementById("theme-toggle").click();
+  }
+});
+
+
+document.addEventListener("click", (e)=>{
+  const box = document.querySelector(".preset-dropdown");
+  const menu = document.getElementById("preset-menu");
+  if (box && menu && !box.contains(e.target)) menu.style.display = "none";
+});
+const _ps = document.getElementById("preset-search");
+if (_ps){
+  _ps.addEventListener("focus", ()=>{
+    const menu = document.getElementById("preset-menu");
+    const ev = new Event("input"); _ps.dispatchEvent(ev);
+    menu.style.display = "block";
+  });
+}
+
+
+function safeBuild(){
+  try { buildControls(); drawBands(); calc(); }
+  catch (e){ console.error("Build error:", e); try { drawBands(); } catch(_){} }
+}
