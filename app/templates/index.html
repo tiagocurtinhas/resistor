@@ -7,6 +7,7 @@
   <title>Calculadora de Cores de Resistores</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="/static/styles.css"/>
+  <link rel="icon" href="/static/favicon.ico" sizes="any">
 </head>
 <body>
   <header>
@@ -138,6 +139,10 @@
           <div class="tolerance">Tolerância: —</div>
           <div class="range">Faixa: —</div>
           <div class="actions">
+      <div class="field">
+        <label>Cor dos rótulos</label>
+        <input id="label-color" type="color" value="#cfd3e1" style="width:46px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card);padding:0"/>
+      </div>
             <button id="btn-png">Exportar PNG</button>
             <button id="btn-pdf">Exportar PDF</button>
           </div>

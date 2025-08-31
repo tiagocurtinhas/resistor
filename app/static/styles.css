@@ -72,3 +72,6 @@ button#theme-toggle:hover{ filter:brightness(1.05) }
 /* v3.3.2: label color vars */
 :root{ --band-label-color:#cfd3e1; } /* dark default */
 :root[data-theme="light"]{ --band-label-color:#0b0b10; } /* pedido do usuário */
+
+/* v3.3.3 color input */
+.field input[type=color]{ cursor:pointer; }

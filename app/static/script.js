@@ -394,7 +394,7 @@ function drawBands() {
     if (k==="tol" && (!c || c==="(padrão)")) c = tolDefault();
     if (k==="temp" && (!c || c==="(nenhum)")) c = "sem cor";
     if (!c || c==="(padrão)") c = "preto";
-    rect.style.fill = COLORS_HEX[c] || "#0b0b10";
+    rect.style.fill = COLORS_HEX[c] || "#000";
     svg.appendChild(rect);
     bandRects.push(rect);
 
@@ -403,7 +403,7 @@ function drawBands() {
     t.setAttribute("y", 170);
     t.setAttribute("text-anchor","middle");
     t.setAttribute("font-size","12px");
-    t.setAttribute("fill", getComputedStyle(document.documentElement).getPropertyValue("--band-label-color").trim() || "#0b0b10");
+    t.setAttribute("fill", getComputedStyle(document.documentElement).getPropertyValue("--band-label-color").trim() || "#cfd3e1");
     let lbl = "-";
     if (k==="digit") lbl = String(DIGIT_INDEX[c]);
     else if (k==="mult") lbl = "×10^" + (MULT_EXP[c] ?? 0);
@@ -517,3 +517,30 @@ function safeBuild(){
   try { buildControls(); drawBands(); calc(); }
   catch (e){ console.error("Build error:", e); try { drawBands(); } catch(_){} }
 }
+
+
+// === v3.3.3 Label color persistence ===
+function applyLabelColor(hex){
+  if (!hex) return;
+  document.documentElement.style.setProperty("--band-label-color", hex);
+  try{ localStorage.setItem("labelColor", hex); }catch(_){}
+}
+(function initLabelColor(){
+  const input = document.getElementById("label-color");
+  const saved = (function(){ try { return localStorage.getItem("labelColor"); } catch(_){ return null; } })();
+  if (saved){
+    input && (input.value = saved);
+    applyLabelColor(saved);
+  } else {
+    // seed with current computed style so input matches initial theme
+    const cur = getComputedStyle(document.documentElement).getPropertyValue("--band-label-color").trim() || "#cfd3e1";
+    input && (input.value = cur);
+  }
+  if (input){
+    input.addEventListener("input", (e)=>{
+      applyLabelColor(e.target.value);
+      // re-draw to ensure new color is applied on current labels
+      try { drawBands(); } catch(_){}
+    });
+  }
+})();
